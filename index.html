@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <tItLe>
+                            			"Fuel efficiency, visually narrated"
+                            		</title>
+    <style>
+    #tooltip {
+        opacity: 0;
+        position: absolute;
+        text-align: left;
+        width: 200px;
+        height: 100px;
+        background: white;
+    }
+
+    .button {
+        display: inline-block;
+        padding: 15px 25px;
+        font-size: 24px;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        outline: none;
+        color: #fff;
+        background-color: green;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 9px grey;
+    }
+
+    .button:hover {
+        background-color: darkgreen;
+    }
+
+    .button:active {
+        background-color: darkgreen;
+        box-shadow: 0 5px black;
+        transform: translateY(4px);
+    }
+    </style>
+
+</head>
+<bOdY onload='init()' style="background-color:white">
+    <script src="https://d3js.org/d3.v5.js">
+    </script>
+    <h1>Fuel efficiency, visually narrated</h1>
+    <p id= "text1" style="opacity:0;">
+
+
+                        As one would expect, 
+                        
+                
+        <span style="color: darkred">
+            <strong>diesel cars</strong>
+        </span>
+
+
+                         are performing better than most 
+                        
+                
+        <span style="color: darkorange">
+            <strong>gasoline cars</strong>
+        </span>
+
+
+                         in terms of miles per gallon (MPG) while driving in the city as well as on the highway.
+                    
+            
+    <p>
+        
+        <p id="text2" style="opacity:0;"> There is a clear upwards trend parallel to the dotted line, indicating that cars with higher MPG in cities, also tend to have higher MPG on highways. Furthermore, we see that cars having a higher number of cylinders (indicated by circle size), perform relatively badly overall. Also, quite unsurprisingly, no single car has better MPG in cities than on highways, as all dots appear above the imaginary diagonal line to the origin.</p>
+    
+        <p id="text3" style="opacity:0;"> To discover the clear winners in terms of city and highway MPG though, we need to zoom out by quite a bit. <span style="color: darkgreen">
+            <strong>Electric cars</strong></span>, having no cylinders, are leagues ahead of cars running on fossil fuels in terms of MPG.</p>
+      
+    <p id="text4" style="opacity:0;"> 
+    The worst performing car in terms of city MPG is a 12 cylinder <span style="color: darkorange">
+            <strong>gasoline Lamborghini</strong></span>, whereas on highways the biggest gas guzzler is a 12 cylinder <span style="color: darkorange">
+            <strong>gasoline Ferrari</strong></span>. The best overall MPG performance comes from the 0 cylinder <span style="color: darkgreen">
+            <strong>electric Hyundai</strong></span>, which is over 10 times more efficient in cities and on highways compared to the two previously mentioned cars, respectively. <ins>Move your mouse over any other individual circles to find out the exact make and performance of those cars</ins>. Your mileage may vary, as they say...
+         </p>
+        
+        <button class="button" onclick="reset()">Restart</button>
+        <button id="nxtbutton" class="button" onclick="scene1()">Next</button>
+        <br>
+        <svg id="chart" width="0" height="0"></svg>
+    <div id="tooltip"></div>
+
+    <script>
+    const size = 600;
+    const margin = 50;
+    var scene = 1;
+
+
+    async function init() {
+        const data = await d3.csv("https://flunky.github.io/cars2017.csv");
+        /* d3.select("body").selectAll("p").data(data).enter().append("p")
+                                        .html(function(d, i) {
+                                            return "Make: " + d.Make + "\n" +
+                                                "Cylinders: " + d.EngineCylinders + "\n" +
+                                                "Avg. Highway MPG: " + d.AverageHighwayMPG + "\n" +
+                                                "Avg. City MPG: " + d.AverageCityMPG
+                                        }); */
+
+        xs = d3.scaleLog().domain([10, 42]).range([0, (size - 2 * margin)]);
+        ys = d3.scaleLog().domain([10, 42]).range([(size - 2 * margin), 0]);
+        cs = d3.scaleOrdinal().domain(["Gasoline", "Diesel", "Electricity"]).range(["darkorange", "darkred", "darkgreen"]);
+        csl = d3.scaleOrdinal().domain(["Gasoline", "Diesel", "Electricity"]).range(["orange", "red", "green"]);
+
+        d3.select("#nxtbutton").style("background-color","green")
+            .attr("onclick","scene1()");
+
+        d3.select("#chart")
+        .attr("width", size)
+        .attr("height", size)
+        .append("g").attr("id", "plot")
+        .attr("transform", "translate(" + margin + "," + margin + ")")
+        .selectAll("circle").data(data).enter()
+        .append("circle")
+        .attr("cx", function(d) {
+            return xs(d.AverageCityMPG);
+        })
+        .attr("cy", function(d) {
+            return ys(size);
+        })
+        .on("mouseover", function(d, i) {
+            d3.select(this).attr("fill", function(d) {
+                return csl(d.Fuel);
+            });
+            d3.select(this).attr("style", "stroke:cyan;");
+            d3.select("#tooltip").style("opacity", 1)
+            .style("left", (d3.event.pageX + 15) + "px")
+            .style("top", (d3.event.pageY + 15) + "px")
+            .html("Make: " + d.Make + "<br>" +
+            "Cylinders: " + d.EngineCylinders + "<br>" +
+            "Avg. Highway MPG: " + d.AverageHighwayMPG + "<br>" +
+            "Avg. City MPG: " + d.AverageCityMPG);
+        })
+        .on("mouseout", function(d) {
+            d3.select(this).attr("style", "stroke:black;");
+            d3.select("#tooltip").style("opacity", 0);
+            d3.select(this).attr("fill", function(d) {
+                return cs(d.Fuel);
+            });
+
+        });
+
+        d3.select("#chart").append("g").attr("id", "leftaxis")
+        .attr("transform", "translate(" + margin + "," + margin + ")")
+        .call(d3.axisLeft(ys).tickValues([10, 15, 20, 30, 40, 50, 100, 150]).tickFormat(d3.format("~s")));
+
+        d3.select("#chart").append("g").attr("id", "bottomaxis")
+        .attr("transform", "translate(" + margin + "," + (size - margin) + ")")
+        .call(d3.axisBottom(xs).tickValues([10, 15, 20, 30, 40, 50, 100, 150]).tickFormat(d3.format("~s")));
+
+        d3.select("#text1")
+        .transition()
+        .duration(5000)
+        .style("opacity", 1);
+
+        d3.select("#chart").selectAll("circle")
+        .transition()
+        .duration(5000)
+        .attr("cx", function(d) {
+            return xs(d.AverageCityMPG);
+        })
+        .attr("cy", function(d) {
+            return ys(d.AverageHighwayMPG);
+        })
+        .attr("r", function(d) {
+            return 1 * d.EngineCylinders + 5;
+        })
+        .attr("style", "stroke:black;")
+        .attr("fill", function(d) {
+            return cs(d.Fuel);
+        })
+        .attr("opacity", .9)
+
+    }
+
+    function reset() {
+        d3.select("#chart").selectAll("*").remove();
+        d3.selectAll("p").style("opacity", 0);
+        init();
+    }
+
+    function scene1() {
+        d3.select("#nxtbutton").attr("onclick","scene2()");
+        
+        d3.select("#plot")
+        .append("path").attr("id", "trend")
+        .attr("d", "M0," + ys(11) + "L" + xs(42) + "," + ys(32))
+        .attr("stroke", "grey")
+        .attr("stroke-width", "5")
+        .style("stroke-dasharray", ("5, 5"))
+        .attr("opacity", 0)
+        .transition()
+        .duration(1000)
+        .attr("opacity", 1);
+        
+        d3.select("#text2")
+        .transition()
+        .duration(5000)
+        .style("opacity", 1);
+    }
+
+    function scene2() {
+        d3.select("#nxtbutton").attr("onclick","scene3()");
+        
+        xs = d3.scaleLog().domain([10, 150]).range([0, (size - 2 * margin)]);
+        ys = d3.scaleLog().domain([10, 150]).range([(size - 2 * margin), 0]);
+
+        d3.select("#chart")
+        .transition()
+        .duration(2000)
+        .selectAll("circle")
+        .attr("cx", function(d) {
+            return xs(d.AverageCityMPG);
+        })
+        .attr("cy", function(d) {
+            return ys(d.AverageHighwayMPG);
+        });
+
+        d3.select("#leftaxis")
+        .transition()
+        .delay(500)
+        .duration(3000)
+        .call(d3.axisLeft(ys).tickValues([10, 15, 20, 30, 40, 50, 100, 150]).tickFormat(d3.format("~s")));
+
+        d3.select("#bottomaxis")
+        .transition()
+        .delay(500)
+        .duration(3000)
+        .call(d3.axisBottom(xs).tickValues([10, 15, 20, 30, 40, 50, 100, 150]).tickFormat(d3.format("~s")));
+
+        d3.selectAll("#trend").transition()
+        .duration(3000)
+        .attr("d", "M0," + ys(12) + "L" + xs(150) + "," + ys(100));
+        
+        d3.select("#text3")
+        .transition()
+        .duration(5000)
+        .style("opacity", 1);
+        
+    }
+        function scene3(){
+        d3.select("#nxtbutton").style("background-color","grey")
+            .attr("onclick","");
+        
+        d3.select("#text4")
+        .transition()
+        .duration(5000)
+        .style("opacity", 1);
+              
+        d3.select("#plot")
+        .append("path")
+        .attr("d", "M0," + ys(17) + "L" + xs(48) + "," + ys(17))
+        .attr("stroke", "black")
+        .attr("stroke-width", "1")
+        .attr("opacity", 0)
+        .transition()
+        .duration(1000)
+        .delay(2000)
+        .attr("opacity", 1);
+        
+        d3.select("#plot")
+        .append("circle")
+        .attr("cx", xs(0))
+        .attr("cy", ys(17))
+        .attr("r", 2)
+        .attr("stroke", "black")
+        .attr("fill", "black")
+        .attr("opacity", 0)
+        .transition()
+        .duration(1000)
+        .delay(2000)
+        .attr("opacity", 1);
+        
+        d3.select("#plot")
+        .append("text")
+        .attr("x", xs(20))
+        .attr("y", ys(17))
+        .attr("stroke", "black")
+        .attr("opacity", 0)
+        .text("12 cylinder Lamborghini")
+        .transition()
+        .duration(1000)
+        .delay(2000)
+        .attr("opacity", 1);
+        
+        d3.select("#plot")
+        .append("path")
+        .attr("d", "M"+xs(12)+","+ ys(16) + "L" + xs(100) + "," + ys(16))
+        .attr("stroke", "black")
+        .attr("stroke-width", "1")
+        .attr("opacity", 0)
+        .transition()
+        .duration(1000)
+        .delay(3000)
+        .attr("opacity", 1);
+        
+        d3.select("#plot")
+        .append("circle")
+        .attr("cx", xs(12))
+        .attr("cy", ys(16))
+        .attr("r", 2)
+        .attr("stroke", "black")
+        .attr("fill", "black")
+        .attr("opacity", 0)
+        .transition()
+        .duration(1000)
+        .delay(3000)
+        .attr("opacity", 1);
+        
+        d3.select("#plot")
+        .append("text")
+        .attr("x", xs(50))
+        .attr("y", ys(16))
+        .attr("stroke", "black")
+        .attr("opacity", 0)
+        .text("12 cylinder Ferrari")
+        .transition()
+        .duration(1000)
+        .delay(3000)
+        .attr("opacity", 1);
+
+        
+        d3.select("#plot")
+        .append("path")
+        .attr("d", "M"+xs(50)+","+ ys(122) + "L" + xs(150) + "," + ys(122))
+        .attr("stroke", "black")
+        .attr("stroke-width", "1")
+        .attr("opacity", 0)
+        .transition()
+        .duration(1000)
+        .delay(4000)
+        .attr("opacity", 1);
+        
+        d3.select("#plot")
+        .append("circle")
+        .attr("cx", xs(150))
+        .attr("cy", ys(122))
+        .attr("r", 2)
+        .attr("stroke", "black")
+        .attr("fill", "black")
+        .attr("opacity", 0)
+        .transition()
+        .duration(1000)
+        .delay(4000)
+        .attr("opacity", 1);
+        
+        d3.select("#plot")
+        .append("text")
+        .attr("x", xs(50))
+        .attr("y", ys(122))
+        .attr("stroke", "black")
+        .attr("opacity", 0)
+        .text("0 cylinder Hyundai")
+        .transition()
+        .duration(1000)
+        .delay(4000)
+        .attr("opacity", 1);
+
+
+    }
+    </script>
+
+</body>
+</html>
+
+
