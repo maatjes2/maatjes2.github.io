@@ -153,6 +153,21 @@
         d3.select("#chart").append("g").attr("id", "bottomaxis")
         .attr("transform", "translate(" + margin + "," + (size - margin) + ")")
         .call(d3.axisBottom(xs).tickValues([10, 15, 20, 30, 40, 50, 100, 150]).tickFormat(d3.format("~s")));
+        
+        // Add X axis label:
+        d3.select("#chart").append("text")
+        .attr("text-anchor", "end")
+        .attr("x", size)
+        .attr("y", size + margin.top + 20)
+        .text("Avg. city MPG");
+
+        // Y axis label:
+        d3.select("#chart").append("text")
+        .attr("text-anchor", "end")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -size.left+20)
+        .attr("x", -size.top)
+        .text("Avg. highway MPG")
 
         d3.select("#text1")
         .transition()
