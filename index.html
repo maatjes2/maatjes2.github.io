@@ -108,7 +108,7 @@
         cs = d3.scaleOrdinal().domain(["Gasoline", "Diesel", "Electricity"]).range(["darkorange", "darkred", "darkgreen"]);
         csl = d3.scaleOrdinal().domain(["Gasoline", "Diesel", "Electricity"]).range(["orange", "red", "green"]);
 
-        d3.select("#nxtbutton").style("background-color","green")
+        d3.select("#nxtbutton")
             .attr("onclick","scene1()");
 
         d3.select("#chart")
@@ -157,16 +157,16 @@
         // Add X axis label:
         d3.select("#chart").append("text")
         .attr("text-anchor", "end")
-        .attr("x", size)
-        .attr("y", size + margin.top + 20)
+        .attr("x", size/2+margin)
+        .attr("y", size-20)
         .text("Avg. city MPG");
 
         // Y axis label:
         d3.select("#chart").append("text")
         .attr("text-anchor", "end")
+        .attr("y", margin-30)
+        .attr("x", -(size/2-margin))
         .attr("transform", "rotate(-90)")
-        .attr("y", -size.left+20)
-        .attr("x", -size.top)
         .text("Avg. highway MPG")
 
         d3.select("#text1")
